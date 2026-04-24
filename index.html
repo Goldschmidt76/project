@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Min Portefølje</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <h2>Min aktieportefølje</h2>
+  <canvas id="chart" width="600" height="300"></canvas>
+
+  <script>
+    const portfolio = [
+      "TSM"
+    ];
+
+    async function fetchStock(symbol) {
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1mo&interval=1d`;
+
+  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+
+  const res = await fetch(proxyUrl);
+  const data = await res.json();
+
+  const result = data.chart.result[0];
+
+  const timestamps = result.timestamp;
+  const prices = result.indicators.quote[0].close;
+
+  const dates = timestamps.map(ts => {
+    const d = new Date(ts * 1000);
+    return d.toLocaleDateString("da-DK");
+  });
+
+  return { symbol, dates, prices };
+}
+
+    async function loadPortfolio() {
+      const datasets = [];
+      let labels = [];
+
+      for (let symbol of portfolio) {
+        try {
+          console.log("Henter:", symbol);
+
+          const stock = await fetchStock(symbol);
+
+          if (labels.length === 0) {
+            labels = stock.dates;
+          }
+
+          datasets.push({
+            label: symbol,
+            data: stock.prices,
+            borderWidth: 2
+          });
+
+        } catch (err) {
+          console.log("Fejl:", symbol, err);
+        }
+      }
+
+      drawChart(labels, datasets);
+    }
+
+    function drawChart(labels, datasets) {
+      const ctx = document.getElementById("chart").getContext("2d");
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top"
+            }
+          }
+        }
+      });
+    }
+
+    loadPortfolio();
+  </script>
+
+</body>
+</html>
