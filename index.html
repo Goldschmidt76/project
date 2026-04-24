@@ -15,13 +15,15 @@
       "TSM"
     ];
 
-    async function fetchStock(symbol) {
-  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1mo&interval=1d`;
+   async function fetchStock(symbol) {
+  const url = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?range=1mo&interval=1d`;
 
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
-
-  const res = await fetch(proxyUrl);
+  const res = await fetch(url);
   const data = await res.json();
+
+  if (!data.chart || !data.chart.result) {
+    throw new Error("Ingen data");
+  }
 
   const result = data.chart.result[0];
 
